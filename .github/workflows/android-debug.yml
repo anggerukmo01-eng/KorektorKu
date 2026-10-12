@@ -24,7 +24,10 @@ jobs:
       - name: Install Android platform
         run: |
           echo "ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
-          sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+          SDK_ROOT="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -type f -name sdkmanager | head -1)"
+          if [ -z "$SDKMANAGER" ]; then echo 'Android SDK manager tidak ada pada GitHub runner' >&2; exit 1; fi
+          "$SDKMANAGER" 'platforms;android-35' 'build-tools;35.0.0'
       - name: Determine Android project location
         run: |
           if [ -f android/settings.gradle.kts ]; then echo 'ANDROID_PATH=android' >> "$GITHUB_ENV"; else echo 'ANDROID_PATH=.' >> "$GITHUB_ENV"; fi
