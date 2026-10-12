@@ -1,0 +1,53 @@
+name: KorektorKu Android APK (Debug)
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+      - feature/korektorku-android-v5
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Install Android platform
+        run: |
+          echo "ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
+          SDK_ROOT="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -type f -name sdkmanager | head -1)"
+          if [ -z "$SDKMANAGER" ]; then echo 'Android SDK manager tidak ada pada GitHub runner' >&2; exit 1; fi
+          "$SDKMANAGER" 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Determine Android project location
+        run: |
+          if [ -f android/settings.gradle.kts ]; then echo 'ANDROID_PATH=android' >> "$GITHUB_ENV"; else echo 'ANDROID_PATH=.' >> "$GITHUB_ENV"; fi
+      - name: Test grading and build debug APK
+        run: gradle --no-daemon --stacktrace -p "$ANDROID_PATH" :app:testDebugUnitTest :app:assembleDebug
+      - name: Validate debug APK signature and package identity
+        run: |
+          APK="$ANDROID_PATH/app/build/outputs/apk/debug/app-debug.apk"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -E '^package:|^sdkVersion:|^targetSdkVersion:'
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KorektorKu-Android-Debug-APK
+          path: ${{ env.ANDROID_PATH }}/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+      - name: Upload test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: KorektorKu-Android-Test-Reports
+          path: ${{ env.ANDROID_PATH }}/app/build/test-results/
+          if-no-files-found: ignore
