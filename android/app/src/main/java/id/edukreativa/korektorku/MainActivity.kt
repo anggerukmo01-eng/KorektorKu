@@ -85,7 +85,7 @@ class MainActivity:Activity() {
     };page.addView(b,LinearLayout.LayoutParams(-1,-2))}
     private fun show(msg:String)=Toast.makeText(this,msg,Toast.LENGTH_LONG).show()
     private fun value(e:EditText)=e.text.toString().trim()
-    private fun parts(s:String,delimiter:Char)=s.split(delimiter).map{it.trim()}
+    private fun parts(s:String,delimiter:Char=',')=s.split(delimiter).map{it.trim()}
     private fun getCount(type:Kind)=store.questions.count {it.kind==type && it.active}
 
     private fun home() {
