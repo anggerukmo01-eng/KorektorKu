@@ -1,0 +1,2 @@
+import {useState,useCallback,useRef} from 'react';
+export function useDraft(key,initial=null){const [value,setValue]=useState(()=>{try{return JSON.parse(localStorage.getItem(key))??initial;}catch{return initial;}});const current=useRef(value);const setDraft=useCallback(next=>{const resolved=typeof next==='function'?next(current.current):next;current.current=resolved;try{if(resolved===null)localStorage.removeItem(key);else localStorage.setItem(key,JSON.stringify(resolved));}catch{}setValue(resolved);},[key]);return [value,setDraft];}

@@ -1,0 +1,2 @@
+import React from 'react';import {useApp} from '../App';
+export default function TestPicker(){const {data,testId,setTestId}=useApp();return <label className="field test-picker"><span>Pilih tes</span><select value={testId} onChange={e=>setTestId(e.target.value)}><option value="">Pilih tes yang akan dikerjakan</option>{data.tests.map(t=><option key={t.id} value={t.id}>{data.subjects.find(s=>s.id===t.subjectId)?.name} · {t.title} · Kelas {t.class}</option>)}</select></label>;}
